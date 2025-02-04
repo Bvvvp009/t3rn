@@ -18,17 +18,38 @@ https://github.com/t3rn/executor-release/releases/
 #### For Ubuntu
 
 ```bash
+# Check if t3rn folder exists and compare versions
+if [ -d "t3rn" ]; then
+    echo "Existing t3rn directory found. Checking version..."
+    CURRENT_VERSION=$(cat t3rn/VERSION 2>/dev/null || echo "unknown")
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+
+    if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+        echo "You already have the latest version ($CURRENT_VERSION) installed."
+        exit 0
+    else
+        echo "Outdated version ($CURRENT_VERSION) detected. Removing old version..."
+        rm -rf t3rn
+    fi
+fi
+
 # Create and navigate to t3rn directory
 mkdir t3rn
 cd t3rn
 
 # Download latest release
+echo "Fetching the latest executor release..."
 curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | \
 grep -Po '"tag_name": "\K.*?(?=")' | \
 xargs -I {} wget https://github.com/t3rn/executor-release/releases/download/{}/executor-linux-{}.tar.gz
 
 # Extract the archive
+echo "Extracting executor binary..."
 tar -xzf executor-linux-*.tar.gz
+
+# Save version info
+LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+echo "$LATEST_VERSION" > VERSION
 
 # Navigate to the executor binary location
 cd executor/executor/bin
@@ -37,18 +58,39 @@ cd executor/executor/bin
 #### For macOS
 
 ```bash
+# Check if t3rn folder exists and compare versions
+if [ -d "t3rn" ]; then
+    echo "Existing t3rn directory found. Checking version..."
+    CURRENT_VERSION=$(cat t3rn/VERSION 2>/dev/null || echo "unknown")
+    LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -o '"tag_name": "[^"]*' | cut -d'"' -f4)
+
+    if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+        echo "You already have the latest version ($CURRENT_VERSION) installed."
+        exit 0
+    else
+        echo "Outdated version ($CURRENT_VERSION) detected. Removing old version..."
+        rm -rf t3rn
+    fi
+fi
+
 # Create and navigate to t3rn directory
 mkdir t3rn
 cd t3rn
 
 # Download latest release
+echo "Fetching the latest executor release..."
 curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | \
 grep -o '"tag_name": "[^"]*' | \
 cut -d'"' -f4 | \
 xargs -I {} curl -LO https://github.com/t3rn/executor-release/releases/download/{}/executor-macos-{}.tar.gz
 
 # Extract the archive
+echo "Extracting executor binary..."
 tar -xzf executor-macos-*.tar.gz
+
+# Save version info
+LATEST_VERSION=$(curl -s https://api.github.com/repos/t3rn/executor-release/releases/latest | grep -o '"tag_name": "[^"]*' | cut -d'"' -f4)
+echo "$LATEST_VERSION" > VERSION
 
 # Navigate to the executor binary location
 cd executor/executor/bin
